@@ -19,6 +19,7 @@ package com.ververica.flinktraining.exercises.datastream_java.basics;
 import com.ververica.flinktraining.exercises.datastream_java.sources.TaxiRideSource;
 import com.ververica.flinktraining.exercises.datastream_java.datatypes.TaxiRide;
 import com.ververica.flinktraining.exercises.datastream_java.utils.ExerciseBase;
+import com.ververica.flinktraining.exercises.datastream_java.utils.GeoUtils;
 import com.ververica.flinktraining.exercises.datastream_java.utils.MissingSolutionException;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.utils.ParameterTool;

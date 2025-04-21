@@ -20,10 +20,16 @@ import com.ververica.flinktraining.exercises.datastream_java.datatypes.TaxiFare;
 import com.ververica.flinktraining.exercises.datastream_java.sources.TaxiFareSource;
 import com.ververica.flinktraining.exercises.datastream_java.utils.ExerciseBase;
 import com.ververica.flinktraining.exercises.datastream_java.utils.MissingSolutionException;
+import com.ververica.flinktraining.solutions.datastream_java.windows.HourlyTipsSolution.AddTips;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.util.Collector;
 
 /**
  * The "Hourly Tips" exercise of the Flink training
