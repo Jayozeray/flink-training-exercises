@@ -55,12 +55,28 @@ public class HourlyTipsExercise extends ExerciseBase {
 		// start the data generator
 		DataStream<TaxiFare> fares = env.addSource(fareSourceOrTest(new TaxiFareSource(input, maxEventDelay, servingSpeedFactor)));
 
-		throw new MissingSolutionException();
+		//throw new MissingSolutionException();
+		DataStream<Tuple3<Long, Long, Float>> hourlyMax = fares
+				.keyBy((TaxiFare fare) -> fare.driverId)
+				.timeWindow(Time.hours(1))
+				.process(new ProcessWindowFunction<TaxiFare, Tuple3<Long, Long, Float>, Long, TimeWindow>() {
+					@Override
+					public void process(Long key, Context context, Iterable<TaxiFare> fares,
+										Collector<Tuple3<Long, Long, Float>> out) throws Exception {
+						float sumOfTips = 0F;
+						for (TaxiFare f : fares) {
+							sumOfTips += f.tip;
+						}
+						out.collect(new Tuple3<Long, Long, Float>(context.window().getEnd(), key, sumOfTips));
+					}
+				})
+				.timeWindowAll(Time.hours(1))
+				.maxBy(2);
 
-//		printOrTest(hourlyMax);
+		printOrTest(hourlyMax);
 
 		// execute the transformation pipeline
-//		env.execute("Hourly Tips (java)");
+		env.execute("Hourly Tips (java)");
 	}
 
 }

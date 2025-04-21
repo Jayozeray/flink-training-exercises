@@ -84,19 +84,45 @@ public class ExpiringStateExercise extends ExerciseBase {
 
 		@Override
 		public void open(Configuration config) throws Exception {
-			throw new MissingSolutionException();
+			rideState = getRuntimeContext().getState(new ValueStateDescriptor<>("ride", TaxiRide.class));
+			fareState = getRuntimeContext().getState(new ValueStateDescriptor<>("fare", TaxiFare.class));
 		}
 
 		@Override
 		public void onTimer(long timestamp, OnTimerContext ctx, Collector<Tuple2<TaxiRide, TaxiFare>> out) throws Exception {
+			if (fareState.value() != null) {
+				ctx.output(unmatchedFares, fareState.value());
+				fareState.clear();
+			}
+			if (rideState.value() != null) {
+				ctx.output(unmatchedRides, rideState.value());
+				rideState.clear();
 		}
 
 		@Override
 		public void processElement1(TaxiRide ride, Context context, Collector<Tuple2<TaxiRide, TaxiFare>> out) throws Exception {
+				TaxiFare fare = fareState.value();
+				if (fare != null) {
+					fareState.clear();
+					context.timerService().deleteEventTimeTimer(fare.getEventTime());
+					out.collect(new Tuple2<TaxiRide, TaxiFare>(ride, fare));
+				} else {
+					rideState.update(ride);
+					context.timerService().registerEventTimeTimer(ride.getEventTime());
+			}
 		}
 
 		@Override
 		public void processElement2(TaxiFare fare, Context context, Collector<Tuple2<TaxiRide, TaxiFare>> out) throws Exception {
+				TaxiRide ride = rideState.value();
+				if (ride != null) {
+					rideState.clear();
+					context.timerService().deleteEventTimeTimer(ride.getEventTime());
+					out.collect(new Tuple2<TaxiRide, TaxiFare>(ride, fare));
+				} else {
+					fareState.update(fare);
+					context.timerService().registerEventTimeTimer(fare.getEventTime());
+			}
 		}
 	}
 }

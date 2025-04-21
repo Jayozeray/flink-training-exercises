@@ -74,18 +74,34 @@ public class RidesAndFaresExercise extends ExerciseBase {
 	}
 
 	public static class EnrichmentFunction extends RichCoFlatMapFunction<TaxiRide, TaxiFare, Tuple2<TaxiRide, TaxiFare>> {
+		private ValueState<TaxiRide> rideState;
+		private ValueState<TaxiFare> fareState;
 
 		@Override
 		public void open(Configuration config) throws Exception {
-			throw new MissingSolutionException();
+			rideState = getRuntimeContext().getState(new ValueStateDescriptor<>("ride", TaxiRide.class));
+			fareState = getRuntimeContext().getState(new ValueStateDescriptor<>("fare", TaxiFare.class));
 		}
 
 		@Override
 		public void flatMap1(TaxiRide ride, Collector<Tuple2<TaxiRide, TaxiFare>> out) throws Exception {
+			TaxiFare fare = fareState.value();
+			if (fare != null) {
+				fareState.clear();
+				out.collect(new Tuple2<TaxiRide, TaxiFare>(ride, fare));
+			} else {
+				rideState.update(ride);
 		}
 
 		@Override
 		public void flatMap2(TaxiFare fare, Collector<Tuple2<TaxiRide, TaxiFare>> out) throws Exception {
+				TaxiRide ride = rideState.value();
+				if (ride != null) {
+					rideState.clear();
+					out.collect(new Tuple2<TaxiRide, TaxiFare>(ride, fare));
+				} else {
+					fareState.update(fare);
+			}
 		}
 	}
 }
